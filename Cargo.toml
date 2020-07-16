@@ -1,0 +1,9 @@
+[package]
+name = "at42qt1070"
+version = "0.0.1"
+authors = ["Sven Friedrich <friedrich122112@googlemail..com>"]
+edition = "2018"
+
+[dependencies]
+embedded-hal = "1.0.0-alpha.1"
+ux = "0.1.3"
