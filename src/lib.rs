@@ -35,12 +35,8 @@ where
         self.register_map.reg_as_byte(reg)
     }
 
-    pub fn set_negative_threshold(&mut self, threshold: u8, key: u8) -> Result<(), E> {
-        if key > 6 {
-            return Ok(());
-        }
-
-        *self.register_map.get_nthr_key_register_mut(key).unwrap() = threshold;
+    pub fn set_negative_threshold(&mut self, threshold: u8, key: Key) -> Result<(), E> {
+        *self.register_map.get_nthr_key_register_mut(&key) = threshold;
         self.write_reg_map_reg(&NthrKey(key))
     }
 
@@ -49,12 +45,8 @@ where
         Ok(())
     }
 
-    pub fn set_detection_integrator(&mut self, di: u8, key: u8) -> Result<(), E> {
-        if key > 6 {
-            return Ok(());
-        }
-
-        *self.register_map.get_di_key_register_mut(key).unwrap() = di;
+    pub fn set_detection_integrator(&mut self, di: u8, key: Key) -> Result<(), E> {
+        *self.register_map.get_di_key_register_mut(&key) = di;
         self.write_reg_map_reg(&DIKey(key))
     }
 
@@ -96,7 +88,7 @@ where
     }
 
     pub fn read_chip_id(&mut self) -> Result<(u8, u8), E> {
-        self.read_reg(RegisterMap::get_register_index(&ChipID))?;
+        self.read_reg(RegisterMap::get_register_addr(&ChipID))?;
 
         Ok(self.read_cached_chip_id())
     }
@@ -106,7 +98,7 @@ where
     }
 
     pub fn read_firmware_version(&mut self) -> Result<u8, E> {
-        self.read_reg(RegisterMap::get_register_index(&FirmwareVersion))?;
+        self.read_reg(RegisterMap::get_register_addr(&FirmwareVersion))?;
 
         Ok(self.register_map.firmware_version)
     }
@@ -120,7 +112,7 @@ where
     }
 
     pub fn read_detection_status(&mut self) -> Result<(bool, bool, bool), E> {
-        self.read_reg(RegisterMap::get_register_index(&DetectionStatus))?;
+        self.read_reg(RegisterMap::get_register_addr(&DetectionStatus))?;
 
         Ok(self.read_cached_detection_status())
     }
@@ -155,23 +147,14 @@ where
         Ok(touch)
     }
 
-    pub fn read_cached_key_status(&self, key: u8) -> bool {
+    pub fn read_cached_key_status(&self, key: Key) -> bool {
         let status = &self.register_map.key_status;
 
-        match key {
-            0 => status.key0,
-            1 => status.key1,
-            2 => status.key2,
-            3 => status.key3,
-            4 => status.key4,
-            5 => status.key5,
-            6 => status.key6,
-            _ => false,
-        }
+        status.key[key as usize]
     }
 
-    pub fn read_key_status(&mut self, key: u8) -> Result<bool, E> {
-        self.read_reg(RegisterMap::get_register_index(&KeyStatus))?;
+    pub fn read_key_status(&mut self, key: Key) -> Result<bool, E> {
+        self.read_reg(RegisterMap::get_register_addr(&KeyStatus))?;
 
         Ok(self.read_cached_key_status(key))
     }
@@ -183,52 +166,51 @@ where
 
         self.register_map
             .chip_id
-            .update(new[RegisterMap::get_register_index(&ChipID) as usize]);
+            .update(new[RegisterMap::get_register_addr(&ChipID) as usize]);
         self.register_map.firmware_version =
-            new[RegisterMap::get_register_index(&FirmwareVersion) as usize];
+            new[RegisterMap::get_register_addr(&FirmwareVersion) as usize];
         self.register_map
             .detection_status
-            .update(new[RegisterMap::get_register_index(&DetectionStatus) as usize]);
+            .update(new[RegisterMap::get_register_addr(&DetectionStatus) as usize]);
         self.register_map
             .key_status
-            .update(new[RegisterMap::get_register_index(&KeyStatus) as usize]);
+            .update(new[RegisterMap::get_register_addr(&KeyStatus) as usize]);
         for key in 0..7 {
             *self
                 .register_map
-                .get_key_signal_register_mut(key, true)
-                .unwrap() = new[RegisterMap::get_register_index(&KeySignalMs(key)) as usize];
+                .get_key_signal_register_mut(&Key::from(key), true) =
+                new[RegisterMap::get_register_addr(&KeySignalMs(Key::from(key))) as usize];
             *self
                 .register_map
-                .get_key_signal_register_mut(key, false)
-                .unwrap() = new[RegisterMap::get_register_index(&KeySignalLs(key)) as usize];
+                .get_key_signal_register_mut(&Key::from(key), false) =
+                new[RegisterMap::get_register_addr(&KeySignalLs(Key::from(key))) as usize];
             *self
                 .register_map
-                .get_reference_data_register_mut(key, true)
-                .unwrap() = new[RegisterMap::get_register_index(&ReferenceDataMs(key)) as usize];
+                .get_reference_data_register_mut(&Key::from(key), true) =
+                new[RegisterMap::get_register_addr(&ReferenceDataMs(Key::from(key))) as usize];
             *self
                 .register_map
-                .get_reference_data_register_mut(key, false)
-                .unwrap() = new[RegisterMap::get_register_index(&ReferenceDataLs(key)) as usize];
-            *self.register_map.get_nthr_key_register_mut(key).unwrap() =
-                new[RegisterMap::get_register_index(&NthrKey(key)) as usize];
+                .get_reference_data_register_mut(&Key::from(key), false) =
+                new[RegisterMap::get_register_addr(&ReferenceDataLs(Key::from(key))) as usize];
+            *self.register_map.get_nthr_key_register_mut(&Key::from(key)) =
+                new[RegisterMap::get_register_addr(&NthrKey(Key::from(key))) as usize];
             self.register_map
-                .get_ave_aks_key_register_mut(key)
-                .unwrap()
-                .update(new[RegisterMap::get_register_index(&AveAksKey(key)) as usize]);
-            *self.register_map.get_di_key_register_mut(key).unwrap() =
-                new[RegisterMap::get_register_index(&DIKey(key)) as usize];
+                .get_ave_aks_key_register_mut(&Key::from(key))
+                .update(new[RegisterMap::get_register_addr(&AveAksKey(Key::from(key))) as usize]);
+            *self.register_map.get_di_key_register_mut(&Key::from(key)) =
+                new[RegisterMap::get_register_addr(&DIKey(Key::from(key))) as usize];
         }
         self.register_map
             .fo_mc_guard
-            .update(new[RegisterMap::get_register_index(&FoMcGuard) as usize]);
+            .update(new[RegisterMap::get_register_addr(&FoMcGuard) as usize]);
         self.register_map
             .low_power_mode
-            .update(new[RegisterMap::get_register_index(&LowPowerMode) as usize]);
+            .update(new[RegisterMap::get_register_addr(&LowPowerMode) as usize]);
         self.register_map
             .max_on_duration
-            .update(new[RegisterMap::get_register_index(&MaxOnDuration) as usize]);
-        self.register_map.calibrate = new[RegisterMap::get_register_index(&Calibrate) as usize];
-        self.register_map.reset = new[RegisterMap::get_register_index(&Reset) as usize];
+            .update(new[RegisterMap::get_register_addr(&MaxOnDuration) as usize]);
+        self.register_map.calibrate = new[RegisterMap::get_register_addr(&Calibrate) as usize];
+        self.register_map.reset = new[RegisterMap::get_register_addr(&Reset) as usize];
 
         Ok(())
     }
@@ -236,81 +218,70 @@ where
     pub fn sync_one(&mut self, reg: &Register) -> Result<(), E> {
         match reg {
             Register::ChipID => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.chip_id.update(value)
             }
             Register::FirmwareVersion => {
                 self.register_map.firmware_version =
-                    self.read_reg(RegisterMap::get_register_index(reg))?
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::DetectionStatus => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.detection_status.update(value)
             }
             Register::KeyStatus => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.key_status.update(value)
             }
             Register::KeySignalMs(key) => {
-                *self
-                    .register_map
-                    .get_key_signal_register_mut(key.clone(), true)
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                *self.register_map.get_key_signal_register_mut(key, true) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::KeySignalLs(key) => {
-                *self
-                    .register_map
-                    .get_key_signal_register_mut(key.clone(), false)
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                *self.register_map.get_key_signal_register_mut(key, false) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::ReferenceDataMs(key) => {
-                *self
-                    .register_map
-                    .get_reference_data_register_mut(key.clone(), true)
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                *self.register_map.get_reference_data_register_mut(key, true) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::ReferenceDataLs(key) => {
                 *self
                     .register_map
-                    .get_reference_data_register_mut(key.clone(), false)
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                    .get_reference_data_register_mut(key, false) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::NthrKey(key) => {
-                *self
-                    .register_map
-                    .get_nthr_key_register_mut(key.clone())
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                *self.register_map.get_nthr_key_register_mut(key) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::AveAksKey(key) => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map
-                    .get_ave_aks_key_register_mut(key.clone())
-                    .unwrap()
+                    .get_ave_aks_key_register_mut(key)
                     .update(value);
             }
             Register::DIKey(key) => {
-                *self
-                    .register_map
-                    .get_di_key_register_mut(key.clone())
-                    .unwrap() = self.read_reg(RegisterMap::get_register_index(reg))?
+                *self.register_map.get_di_key_register_mut(key) =
+                    self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::FoMcGuard => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.fo_mc_guard.update(value);
             }
             Register::LowPowerMode => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.low_power_mode.update(value);
             }
             Register::MaxOnDuration => {
-                let value = self.read_reg(RegisterMap::get_register_index(reg))?;
+                let value = self.read_reg(RegisterMap::get_register_addr(reg))?;
                 self.register_map.max_on_duration.update(value);
             }
             Register::Calibrate => {
-                self.register_map.calibrate = self.read_reg(RegisterMap::get_register_index(reg))?
+                self.register_map.calibrate = self.read_reg(RegisterMap::get_register_addr(reg))?
             }
             Register::Reset => {
-                self.register_map.reset = self.read_reg(RegisterMap::get_register_index(reg))?
+                self.register_map.reset = self.read_reg(RegisterMap::get_register_addr(reg))?
             }
         }
 
@@ -345,7 +316,7 @@ where
         }
 
         let value = self.register_map.reg_as_byte(reg);
-        self.write_reg(RegisterMap::get_register_index(reg), value)
+        self.write_reg(RegisterMap::get_register_addr(reg), value)
     }
 
     fn write_reg(&mut self, reg_addr: u8, value: u8) -> Result<(), E> {
