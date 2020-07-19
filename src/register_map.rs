@@ -1,5 +1,4 @@
 use core::borrow::{Borrow, BorrowMut};
-use ux::{u2, u4, u6};
 
 pub const REGISTER_COUNT: u8 = 58;
 
@@ -9,27 +8,27 @@ pub trait RegisterMapRegister {
 }
 
 pub struct ChipId {
-    pub major_id: u4,
-    pub minor_id: u4,
+    pub major_id: u8,
+    pub minor_id: u8,
 }
 
 impl Default for ChipId {
     fn default() -> Self {
         Self {
-            major_id: u4::new(0x2),
-            minor_id: u4::new(0xE),
+            major_id: 0x2,
+            minor_id: 0xE,
         }
     }
 }
 
 impl RegisterMapRegister for ChipId {
     fn as_byte(&self) -> u8 {
-        u8::from(self.major_id) << 4 | u8::from(self.minor_id)
+        self.major_id << 4 | self.minor_id
     }
 
     fn update(&mut self, val: u8) {
-        self.minor_id = u4::new(val >> 4);
-        self.major_id = u4::new(val & 0x0F);
+        self.minor_id = val >> 4;
+        self.major_id = val & 0x0F;
     }
 }
 
@@ -113,42 +112,42 @@ impl RegisterMapRegister for KeyStatus {
 
 #[derive(Copy, Clone)]
 pub struct AveAks {
-    pub ave: u6,
-    pub aks: u2,
+    pub ave: u8,
+    pub aks: u8,
 }
 
 impl Default for AveAks {
     fn default() -> Self {
         Self {
-            ave: u6::new(8),
-            aks: u2::new(1),
+            ave: 0x08,
+            aks: 0x01,
         }
     }
 }
 
 impl RegisterMapRegister for AveAks {
     fn as_byte(&self) -> u8 {
-        u8::from(self.ave) << 2 | u8::from(self.aks)
+        self.ave << 2 | self.aks
     }
 
     fn update(&mut self, val: u8) {
-        self.ave = u6::new(val >> 2);
-        self.aks = u2::new(val & 0x03);
+        self.ave = val >> 2;
+        self.aks = val & 0x03;
     }
 }
 
 pub struct FastOutDiMaxCalGuardChannel {
-    pub fo: bool,
+    pub fast_out: bool,
     pub max_cal: bool,
-    pub guard_channel: u4,
+    pub guard_channel: u8,
 }
 
 impl Default for FastOutDiMaxCalGuardChannel {
     fn default() -> Self {
         Self {
-            fo: false,
+            fast_out: false,
             max_cal: false,
-            guard_channel: u4::new(0),
+            guard_channel: 0x00,
         }
     }
 }
@@ -157,20 +156,20 @@ impl RegisterMapRegister for FastOutDiMaxCalGuardChannel {
     fn as_byte(&self) -> u8 {
         let mut r = 0;
 
-        if self.fo {
+        if self.fast_out {
             r |= 1 << 5;
         }
         if self.max_cal {
             r |= 1 << 4;
         }
 
-        r | u8::from(self.guard_channel)
+        r | self.guard_channel
     }
 
     fn update(&mut self, val: u8) {
-        self.fo = val & 1 << 5 != 0;
+        self.fast_out = val & 1 << 5 != 0;
         self.max_cal = val & 1 << 4 != 0;
-        self.guard_channel = u4::new(val & 0x0F)
+        self.guard_channel = val & 0x0F
     }
 }
 
