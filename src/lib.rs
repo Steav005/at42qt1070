@@ -452,11 +452,3 @@ where
         self.i2c.write(AT42QT1070_I2C_ADDR, &reg_buf)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
