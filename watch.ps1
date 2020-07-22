@@ -1,1 +1,1 @@
-cargo watch -x clippy -c
+cargo watch -x clippy -c --example stm32f401cc

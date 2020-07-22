@@ -27,8 +27,8 @@ impl RegisterMapRegister for ChipId {
     }
 
     fn update(&mut self, val: u8) {
-        self.minor_id = val >> 4;
-        self.major_id = val & 0x0F;
+        self.major_id = val >> 4;
+        self.minor_id = val & 0x0F;
     }
 }
 
@@ -255,8 +255,16 @@ impl Default for RegisterMap {
             key_signal_ls: [0x00; 7],
             reference_data_ms: [0x00; 7],
             reference_data_ls: [0x00; 7],
-            nthr_key: [0x14; 7],
-            ave_aks_key: [AveAks::default(); 7],
+            nthr_key: [0x21, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14],
+            ave_aks_key: [
+                AveAks { ave: 1, aks: 0 },
+                AveAks::default(),
+                AveAks::default(),
+                AveAks::default(),
+                AveAks::default(),
+                AveAks::default(),
+                AveAks::default(),
+            ],
             di_key: [0x04; 7],
             fo_mc_guard: FastOutDiMaxCalGuardChannel::default(),
             low_power_mode: LowPowerMode::default(),
@@ -397,22 +405,18 @@ impl RegisterMap {
             Register::FirmwareVersion => 0x01,
             Register::DetectionStatus => 0x02,
             Register::KeyStatus => 0x03,
-            Register::KeySignalMs(key) => 0x04 + RegisterMap::get_key_register_offset(*key) * 2,
-            Register::KeySignalLs(key) => 0x05 + RegisterMap::get_key_register_offset(*key) * 2,
-            Register::ReferenceDataMs(key) => 0x12 + RegisterMap::get_key_register_offset(*key) * 2,
-            Register::ReferenceDataLs(key) => 0x13 + RegisterMap::get_key_register_offset(*key) * 2,
-            Register::NthrKey(key) => 0x20 + RegisterMap::get_key_register_offset(*key),
-            Register::AveAksKey(key) => 0x27 + RegisterMap::get_key_register_offset(*key),
-            Register::DIKey(key) => 0x2E + RegisterMap::get_key_register_offset(*key),
+            Register::KeySignalMs(key) => 0x04 + (*key as u8) * 2,
+            Register::KeySignalLs(key) => 0x05 + (*key as u8) * 2,
+            Register::ReferenceDataMs(key) => 0x12 + (*key as u8) * 2,
+            Register::ReferenceDataLs(key) => 0x13 + (*key as u8) * 2,
+            Register::NthrKey(key) => 0x20 + (*key as u8),
+            Register::AveAksKey(key) => 0x27 + (*key as u8),
+            Register::DIKey(key) => 0x2E + (*key as u8),
             Register::FoMcGuard => 0x35,
             Register::LowPowerMode => 0x36,
             Register::MaxOnDuration => 0x37,
             Register::Calibrate => 0x38,
             Register::Reset => 0x39,
         }
-    }
-
-    fn get_key_register_offset(key: Key) -> u8 {
-        7 - key as u8
     }
 }

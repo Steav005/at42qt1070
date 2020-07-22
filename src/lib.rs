@@ -37,7 +37,7 @@ where
     pub fn wait_calibrated_blocking(&mut self) -> Result<(), E> {
         loop {
             if !self.read_detection_status()?.2 {
-                return Ok(())
+                return Ok(());
             }
         }
     }
@@ -49,9 +49,11 @@ where
     }
 
     pub fn set_ave_aks(&mut self, ave: u8, aks: u8, key: Key) -> Result<(), E> {
-        let value = AveAks{ave, aks}.as_byte();
+        let value = AveAks { ave, aks }.as_byte();
         self.write_reg_map_reg(&AveAksKey(key), value)?;
-        self.register_map.get_ave_aks_key_register_mut(&key).update(value);
+        self.register_map
+            .get_ave_aks_key_register_mut(&key)
+            .update(value);
 
         Ok(())
     }
@@ -73,12 +75,22 @@ where
         Ok(())
     }
 
-    pub fn set_fo_mc_guard(&mut self, fast_out: bool, max_cal: bool, guard_channel: Option<Key>) -> Result<(), E> {
+    pub fn set_fo_mc_guard(
+        &mut self,
+        fast_out: bool,
+        max_cal: bool,
+        guard_channel: Option<Key>,
+    ) -> Result<(), E> {
         let guard_channel = match guard_channel {
             Some(key) => key as u8,
             None => 0x07,
         };
-        let value = FastOutDiMaxCalGuardChannel{fast_out, max_cal, guard_channel}.as_byte();
+        let value = FastOutDiMaxCalGuardChannel {
+            fast_out,
+            max_cal,
+            guard_channel,
+        }
+        .as_byte();
 
         self.write_reg_map_reg(&FoMcGuard, value)?;
         self.register_map.fo_mc_guard.update(value);
@@ -89,9 +101,7 @@ where
     pub fn set_low_power_mode(&mut self, interval: Duration) -> Result<(), E> {
         let duration = (interval.as_millis() / 8) as u8;
         self.write_reg_map_reg(&LowPowerMode, duration)?;
-        self.register_map
-            .low_power_mode
-            .update(duration);
+        self.register_map.low_power_mode.update(duration);
         Ok(())
     }
 
@@ -101,9 +111,7 @@ where
             None => 0,
         };
         self.write_reg_map_reg(&MaxOnDuration, interval)?;
-        self.register_map
-            .max_on_duration
-            .update(interval);
+        self.register_map.max_on_duration.update(interval);
 
         Ok(())
     }
@@ -175,11 +183,11 @@ where
         Ok(self.read_cached_key_status(key))
     }
 
-    pub fn read_cached_full_key_status(&self) -> [bool; 7]{
+    pub fn read_cached_full_key_status(&self) -> [bool; 7] {
         self.register_map.key_status.key
     }
 
-    pub fn read_full_key_status(&mut self) -> Result<[bool; 7], E>{
+    pub fn read_full_key_status(&mut self) -> Result<[bool; 7], E> {
         self.sync_one(&KeyStatus)?;
 
         Ok(self.read_cached_full_key_status())
@@ -225,12 +233,12 @@ where
     }
 
     //39-45
-    pub fn read_cached_ave_aks(&self, key: Key) -> (u8, u8){
+    pub fn read_cached_ave_aks(&self, key: Key) -> (u8, u8) {
         let ave_aks = self.register_map.get_ave_aks_key_register(&key);
         (ave_aks.ave, ave_aks.aks)
     }
 
-    pub fn read_ave_aks(&mut self, key: Key) -> Result<(u8, u8), E>{
+    pub fn read_ave_aks(&mut self, key: Key) -> Result<(u8, u8), E> {
         self.sync_one(&AveAksKey(key))?;
 
         Ok(self.read_cached_ave_aks(key))
@@ -248,9 +256,13 @@ where
     }
 
     //53
-    pub fn read_cached_fo_mc_guard(&self) -> (bool, bool, u8){
+    pub fn read_cached_fo_mc_guard(&self) -> (bool, bool, u8) {
         let fo_mc_guard = &self.register_map.fo_mc_guard;
-        (fo_mc_guard.fast_out, fo_mc_guard.max_cal, fo_mc_guard.guard_channel)
+        (
+            fo_mc_guard.fast_out,
+            fo_mc_guard.max_cal,
+            fo_mc_guard.guard_channel,
+        )
     }
 
     pub fn read_fo_mc_guard(&mut self) -> Result<(bool, bool, u8), E> {
