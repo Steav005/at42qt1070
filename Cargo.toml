@@ -8,6 +8,7 @@ repository = "https://github.com/Steav005/at42qt1070"
 license-file = "LICENSE"
 categories = ["embedded", "no-std"]
 keywords = ["i2c", "atmel"]
+readme = "README.md"
 
 [dependencies]
 embedded-hal = "0.2.4"
