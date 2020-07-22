@@ -9,6 +9,12 @@ license-file = "LICENSE"
 categories = ["embedded", "no-std"]
 keywords = ["i2c", "atmel"]
 readme = "README.md"
+exclude = [
+    ".cargo/config",
+    "examples/*",
+    "memory.x",
+    "watch.ps1",
+]
 
 [dependencies]
 embedded-hal = "0.2.4"
