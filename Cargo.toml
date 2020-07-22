@@ -1,6 +1,6 @@
 [package]
 name = "at42qt1070"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Sven Friedrich <friedrich122112@googlemail.com>"]
 edition = "2018"
 description = "Embedded-hal implementation for the AT42QT1070"
