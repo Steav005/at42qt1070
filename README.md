@@ -1,5 +1,8 @@
 # AT42QT1070
 
+[![Crates.io](https://img.shields.io/crates/v/at42qt1070.svg)](https://crates.io/crates/at42qt1070)
+[![Released API docs](https://docs.rs/at42qt1070/badge.svg)](https://docs.rs/at42qt1070)
+
 This is an I2C implementation for the [AT42QT1070](https://www.microchip.com/wwwproducts/en/AT42QT1070) Touch Sensor IC.
 
 The used I2C struct is required to implement [embedded_hal::blocking::i2c::Write](https://docs.rs/embedded-hal/0.2.4/embedded_hal/blocking/i2c/trait.Write.html) and [embedded_hal::blocking::i2c::WriteRead](https://docs.rs/embedded-hal/0.2.4/embedded_hal/blocking/i2c/trait.WriteRead.html)
